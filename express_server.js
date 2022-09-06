@@ -2,7 +2,9 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
-function generateRandomString() {}
+function generateRandomString() {
+  return Math.random().toString(36).substr(2, 6)
+}
 
 app.set("view engine", "ejs");
 
@@ -13,14 +15,24 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+app.post("/urls", (req, res) => {
+  console.log(req.body); // Log the POST request body to the console
+  const newString = generateRandomString()
+  urlDatabase[newString] = req.body.longURL;
+  res.redirect(`/urls/${newString}`);
+  // res.send("Ok"); // Respond with 'Ok' (we will replace this)
+});
+
+app.get("/u/:id", (req, res) => {
+  // console.log(req.url);
+  let newTiny = req.url.slice(3)
+  const longURL = urlDatabase[newTiny];
+  res.redirect(longURL);
+});
+
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
-});
-
-app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
 });
 
 app.get("/urls/new", (req, res) => {
