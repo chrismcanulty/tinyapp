@@ -56,6 +56,13 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+app.post("/urls/:id/", (req, res) => {
+  const editID = req.params.id;
+  console.log(req.body.newurl);
+  urlDatabase[editID] = req.body.newurl;
+  res.redirect('/urls/')
+})
+
 app.post("/urls/:id/delete", (req, res) => {
   const deleteID = req.params.id;
   console.log(req.params);

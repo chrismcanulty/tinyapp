@@ -20,9 +20,24 @@
         <p class="card-text">
           Short URL ID: <a href="/u/<%= id %>"><%= id %></a>
         </p>
+        <h5 class="card-title">Edit</h5>
+            <form action="/urls/<%= id %>" method="POST">
+              <label>New URL:</label>
+              <input
+            class="border border-primary"
+            type="text"
+            name="newurl"
+            value=<%= longURL %>
+            style="width: 300px; margin: 1em"
+          />
+          <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+
       </div>
-      <div class="card-footer text-muted"></div>
     </div>
+        <!-- <div class="card-body text-center">
+
+        </div> -->
     <!-- Bootstrap JS -->
     <script
       src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
