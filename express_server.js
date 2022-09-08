@@ -30,6 +30,15 @@ const users = {
   },
 };
 
+const getUserByEmail = (email, userList) => {
+  for (let user in userList) {
+    console.log(user.email)
+    if (email === userList[user].email) {
+      return null;
+    }
+  } return userList
+}
+
 app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
   const newString = generateRandomString()
@@ -42,14 +51,19 @@ app.get("/urls/register", (req, res) => {
   const templateVars = {id: req.params.id,
     longURL: urlDatabase[req.params.id],
     user: users[req.cookies.id]};
+
   res.render("register", templateVars)
 })
 
 app.post("/urls/register", (req, res) => {
-  console.log(req.body);
   const newUserID = generateRandomString();
   const newUserEmail = req.body.email;
   const newUserPassword = req.body.password;
+  if (newUserEmail === "" || newUserPassword === "") {
+    throw new HttpException(400, "Bad Request");
+  } else if (getUserByEmail(newUserEmail, users) === null) {
+    throw new HttpException(400, "Bad Request");
+  }
   users[newUserID] = {
     "id": newUserID,
     "email": newUserEmail,
@@ -57,7 +71,7 @@ app.post("/urls/register", (req, res) => {
   }
   // set a user_id cookie containing the user's newly generated ID
   res.cookie("id", newUserID);
-  console.log(users);
+  // console.log(users);
   res.redirect('/urls');
 })
 
@@ -124,7 +138,7 @@ app.post("/login", (req, res) => {
 })
 
 app.post("/logout", (req, res) => {
-  // res.clearCookie("username");
+  res.clearCookie("id");
   res.redirect('/urls/');
 })
 
