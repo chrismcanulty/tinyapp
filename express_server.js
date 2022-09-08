@@ -44,18 +44,23 @@ const getUserByEmail = (email, userList) => {
 }
 
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
+  // console.log(req.body); // Log the POST request body to the console
+  if (!req.cookies.id) {
+    res.send("Cannot shorten url, please login first")
+  } else if (req.cookies.id) {
   const newString = generateRandomString()
   urlDatabase[newString] = req.body.longURL;
   res.redirect(`/urls/${newString}`);
-  // res.send("Ok"); // Respond with 'Ok' (we will replace this)
+  }
 });
 
 app.get("/urls/register", (req, res) => {
   const templateVars = {id: req.params.id,
     longURL: urlDatabase[req.params.id],
     user: users[req.cookies.id]};
-
+    if (req.cookies.id) {
+      res.redirect("/urls")
+    }
   res.render("register", templateVars)
 })
 
@@ -83,6 +88,9 @@ app.get("/login", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
     user: users[req.cookies.id] };
+  if (req.cookies.id) {
+    res.redirect("/urls")
+  }
   res.render("login", templateVars);
 })
 
@@ -90,7 +98,19 @@ app.get("/u/:id", (req, res) => {
   // console.log(req.url);
   let newTiny = req.url.slice(3)
   const longURL = urlDatabase[newTiny];
-  res.redirect(longURL);
+  let tinyCheck = req.params.id;
+  let checkResult = false;
+  for (const key in urlDatabase) {
+    console.log(key);
+    if (key === tinyCheck) {
+      checkResult = true;
+    }
+  }
+  if (checkResult === false) {
+  res.send("URL does not exist in the database, unable to access")
+  }
+  else if (checkResult = true) {
+  res.redirect(longURL)};
 });
 
 app.get("/urls", (req, res) => {
@@ -105,6 +125,9 @@ app.get("/urls/new", (req, res) => {
     user: users[req.cookies.id]
     // ... any other vars
   };
+  if (!req.cookies.id) {
+    res.redirect("/login")
+  }
   res.render("urls_new", templateVars);
 });
 
