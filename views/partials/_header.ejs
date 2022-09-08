@@ -17,8 +17,7 @@
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
-      <% if (!user) { %>
-        <form action="/login" method="POST">
+        <!-- <form action="/login" method="POST">
           <label>Login: </label>
           <input
         class="border border-primary"
@@ -28,7 +27,11 @@
         style="width: 150px; margin: 1em; border-radius: 4px"
           />
         <button type="submit" class="btn btn-primary">Login</button>
-        </form>
+        </form> -->
+        <div style="display:flex; align-items: right"></div>
+      <% if (!user) { %>
+          <a class="nav-item nav-link" href="/login">Login</a>
+          <a class="nav-item nav-link" href="/urls/register">Register</a>
       <% } else if (user) { %>
         <div style="display:flex; align-items: center; gap:8px">
           <h5 style="margin-bottom: 0; font-weight: normal;" class ="text-center">Logged in as <%= user.email %></h5>

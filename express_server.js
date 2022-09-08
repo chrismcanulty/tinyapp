@@ -75,6 +75,13 @@ app.post("/urls/register", (req, res) => {
   res.redirect('/urls');
 })
 
+app.get("/login", (req, res) => {
+  const templateVars = {
+    urls: urlDatabase,
+    user: users[req.cookies.id] };
+  res.render("login", templateVars);
+})
+
 app.get("/u/:id", (req, res) => {
   // console.log(req.url);
   let newTiny = req.url.slice(3)
