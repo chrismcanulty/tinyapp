@@ -13,8 +13,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b2xVn2: {
+    longURL: "http://www.lighthouselabs.ca",
+    userID: "userOne",
+  },
+  "9sm5xK": {
+    longURL: "http://www.google.com",
+    userID: "userTwo",
+  },
 };
 
 const users = {
@@ -49,14 +55,16 @@ app.post("/urls", (req, res) => {
     res.send("Cannot shorten url, please login first")
   } else if (req.cookies.id) {
   const newString = generateRandomString()
-  urlDatabase[newString] = req.body.longURL;
+  urlDatabase[newString] = { longURL: req.body.longURL,
+    userID: req.cookies.id};
+  console.log(urlDatabase);
   res.redirect(`/urls/${newString}`);
   }
 });
 
 app.get("/urls/register", (req, res) => {
   const templateVars = {id: req.params.id,
-    longURL: urlDatabase[req.params.id],
+    // longURL: urlDatabase[req.params.id]["longURL"],
     user: users[req.cookies.id]};
     if (req.cookies.id) {
       res.redirect("/urls")
@@ -97,7 +105,7 @@ app.get("/login", (req, res) => {
 app.get("/u/:id", (req, res) => {
   // console.log(req.url);
   let newTiny = req.url.slice(3)
-  const longURL = urlDatabase[newTiny];
+  const longURL = urlDatabase[newTiny].longURL;
   let tinyCheck = req.params.id;
   let checkResult = false;
   for (const key in urlDatabase) {
@@ -116,7 +124,8 @@ app.get("/u/:id", (req, res) => {
 app.get("/urls", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    user: users[req.cookies.id] };
+    user: users[req.cookies.id],
+    longURL: "longURL"};
   res.render("urls_index", templateVars);
 });
 
@@ -155,7 +164,7 @@ app.get("/urls.json", (req, res) => {
 app.post("/urls/:id/", (req, res) => {
   const editID = req.params.id;
   console.log(req.body.newurl);
-  urlDatabase[editID] = req.body.newurl;
+  urlDatabase[editID].longURL = req.body.newurl;
   res.redirect('/urls/')
 })
 
