@@ -32,11 +32,15 @@ const users = {
 
 const getUserByEmail = (email, userList) => {
   for (let user in userList) {
-    console.log(user.email)
     if (email === userList[user].email) {
-      return null;
+      // console.log("Password", userList[user].password);
+      // console.log("Object Email", userList[user].email);
+      // console.log("Input email", email);
+      // console.log("User object", userList[user]);
+      // console.log("User ID", userList[user].id);
+      return userList[user].id;
     }
-  } return userList
+  } return null
 }
 
 app.post("/urls", (req, res) => {
@@ -61,7 +65,7 @@ app.post("/urls/register", (req, res) => {
   const newUserPassword = req.body.password;
   if (newUserEmail === "" || newUserPassword === "") {
     throw new HttpException(400, "Bad Request");
-  } else if (getUserByEmail(newUserEmail, users) === null) {
+  } else if (getUserByEmail(newUserEmail, users) !== null) {
     throw new HttpException(400, "Bad Request");
   }
   users[newUserID] = {
@@ -140,7 +144,24 @@ app.post("/urls/:id/delete", (req, res) => {
 })
 
 app.post("/login", (req, res) => {
-  // res.cookie("username", req.body.username);
+  const loginEmail = req.body.email;
+  const loginPassword = req.body.password;
+  const idCheck = (getUserByEmail(loginEmail, users));
+  console.log(idCheck);
+  if (idCheck === null) {
+    throw new HttpException(403, "Bad Request");
+  } else if (users[idCheck].password !== loginPassword) {
+    throw new HttpException(403, "Bad Request");
+  }
+  else if (users[idCheck].password === loginPassword) {
+    res.cookie("id", idCheck);
+  }
+  // users[newUserID] = {
+  //   "id": newUserID,
+  //   "email": newUserEmail,
+  //   "password": newUserPassword
+  // }
+  // set a user_id cookie containing the user's newly generated ID
   res.redirect('/urls/');
 })
 
