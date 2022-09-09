@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 const cookieParser = require('cookie-parser')
+const bcrypt = require("bcryptjs");
 
 function generateRandomString() {
   return Math.random().toString(36).substr(2, 6)
@@ -80,7 +81,7 @@ app.get("/urls/register", (req, res) => {
 app.post("/urls/register", (req, res) => {
   const newUserID = generateRandomString();
   const newUserEmail = req.body.email;
-  const newUserPassword = req.body.password;
+  const newUserPassword = bcrypt.hashSync(req.body.password, 10);
   if (newUserEmail === "" || newUserPassword === "") {
     return res.status(400).send({ Message: 'Bad request'});
   } else if (getUserByEmail(newUserEmail, users) !== null) {
@@ -91,6 +92,7 @@ app.post("/urls/register", (req, res) => {
     "email": newUserEmail,
     "password": newUserPassword
   }
+  console.log(users);
   // set a user_id cookie containing the user's newly generated ID
   res.cookie("id", newUserID);
   res.redirect('/urls');
@@ -218,10 +220,11 @@ app.post("/login", (req, res) => {
   console.log(idCheck);
   if (idCheck === null) {
     return res.status(403).send({ Message: 'Bad request'});
-  } else if (users[idCheck].password !== loginPassword) {
+  } else if (!bcrypt.compareSync(loginPassword, users[idCheck].password)) {
+  // } else if (users[idCheck].password !== loginPassword) {
     return res.status(403).send({ Message: 'Bad request'});
   }
-  else if (users[idCheck].password === loginPassword) {
+  else if (bcrypt.compareSync(loginPassword, users[idCheck].password)) {
     res.cookie("id", idCheck);
   }
   // users[newUserID] = {
