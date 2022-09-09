@@ -36,14 +36,20 @@ const users = {
   },
 };
 
+const urlsForUser = id => {
+  let urlsList = {};
+  for (const url in urlDatabase) {
+    if (urlDatabase[url].userID === id) {
+      // object with tinyURL: longURL key value pair
+      urlsList[url] = urlDatabase[url].longURL
+      // urlsList.push(urlDatabase[url].longURL)
+    }
+  } return urlsList;
+}
+
 const getUserByEmail = (email, userList) => {
   for (let user in userList) {
     if (email === userList[user].email) {
-      // console.log("Password", userList[user].password);
-      // console.log("Object Email", userList[user].email);
-      // console.log("Input email", email);
-      // console.log("User object", userList[user]);
-      // console.log("User ID", userList[user].id);
       return userList[user].id;
     }
   } return null
@@ -57,7 +63,6 @@ app.post("/urls", (req, res) => {
   const newString = generateRandomString()
   urlDatabase[newString] = { longURL: req.body.longURL,
     userID: req.cookies.id};
-  console.log(urlDatabase);
   res.redirect(`/urls/${newString}`);
   }
 });
@@ -77,9 +82,9 @@ app.post("/urls/register", (req, res) => {
   const newUserEmail = req.body.email;
   const newUserPassword = req.body.password;
   if (newUserEmail === "" || newUserPassword === "") {
-    throw new HttpException(400, "Bad Request");
+    return res.status(400).send({ Message: 'Bad request'});
   } else if (getUserByEmail(newUserEmail, users) !== null) {
-    throw new HttpException(400, "Bad Request");
+    return res.status(400).send({ Message: 'Bad request'});
   }
   users[newUserID] = {
     "id": newUserID,
@@ -88,7 +93,6 @@ app.post("/urls/register", (req, res) => {
   }
   // set a user_id cookie containing the user's newly generated ID
   res.cookie("id", newUserID);
-  // console.log(users);
   res.redirect('/urls');
 })
 
@@ -109,7 +113,6 @@ app.get("/u/:id", (req, res) => {
   let tinyCheck = req.params.id;
   let checkResult = false;
   for (const key in urlDatabase) {
-    console.log(key);
     if (key === tinyCheck) {
       checkResult = true;
     }
@@ -123,10 +126,13 @@ app.get("/u/:id", (req, res) => {
 
 app.get("/urls", (req, res) => {
   const templateVars = {
-    urls: urlDatabase,
+    urls: urlsForUser(req.cookies.id),
     user: users[req.cookies.id],
     longURL: "longURL"};
-  res.render("urls_index", templateVars);
+  if (!templateVars.user) {
+    return res.status(400).send({ Message: 'Please login first at http://localhost:8080/login'})
+  } else if (templateVars.user) {
+    res.render("urls_index", templateVars)};
 });
 
 app.get("/urls/new", (req, res) => {
@@ -136,16 +142,23 @@ app.get("/urls/new", (req, res) => {
   };
   if (!req.cookies.id) {
     res.redirect("/login")
-  }
-  res.render("urls_new", templateVars);
+  } else if (req.cookies.id) {
+  res.render("urls_new", templateVars)};
 });
 
 app.get("/urls/:id", (req, res) => {
   const templateVars = {
+    urls: urlsForUser(req.cookies.id),
     id: req.params.id,
-    longURL: urlDatabase[req.params.id],
+    longURL: urlDatabase[req.params.id]["longURL"],
     user: users[req.cookies.id]
   };
+  // if (!templateVars.user) {
+  //   res.redirect('/login')
+  // return error message if user does not own the url at /urls/:id
+  if (!templateVars["urls"][templateVars["id"]]) {
+    return res.status(400).send({ Message: 'Bad request'});
+  }
   res.render("urls_show", templateVars);
 });
 
@@ -163,16 +176,39 @@ app.get("/urls.json", (req, res) => {
 
 app.post("/urls/:id/", (req, res) => {
   const editID = req.params.id;
-  console.log(req.body.newurl);
+  const templateVars = {
+    urls: urlsForUser(req.cookies.id),
+    // id: req.params.id,
+    longURL: urlDatabase[req.params.id]["longURL"],
+    user: users[req.cookies.id]
+  }
+  console.log(editID);
+  if (!templateVars["urls"][editID]) {
+    return res.status(400).send({ Message: 'Bad request'});
+  }
   urlDatabase[editID].longURL = req.body.newurl;
   res.redirect('/urls/')
 })
 
 app.post("/urls/:id/delete", (req, res) => {
   const deleteID = req.params.id;
-  console.log(req.params);
+  // console.log(req.params);
+  const templateVars = {
+    urls: urlsForUser(req.cookies.id),
+    // id: req.params.id,
+    longURL: urlDatabase[req.params.id]["longURL"],
+    user: users[req.cookies.id]
+  }
+  // if (!deleteID) {
+  //   return res.status(400).send({ Message: 'Bad request'})};
+  if (!templateVars["urls"][deleteID]) {
+    return res.status(400).send({ Message: 'Bad request'});
+  }
+  // if (!req.cookies.id) {
+  //   res.redirect("/login")
+  else if (req.cookies.id) {
   delete (urlDatabase[deleteID]);
-  res.redirect('/urls/');
+  res.redirect('/urls/')};
 })
 
 app.post("/login", (req, res) => {
@@ -181,9 +217,9 @@ app.post("/login", (req, res) => {
   const idCheck = (getUserByEmail(loginEmail, users));
   console.log(idCheck);
   if (idCheck === null) {
-    throw new HttpException(403, "Bad Request");
+    return res.status(403).send({ Message: 'Bad request'});
   } else if (users[idCheck].password !== loginPassword) {
-    throw new HttpException(403, "Bad Request");
+    return res.status(403).send({ Message: 'Bad request'});
   }
   else if (users[idCheck].password === loginPassword) {
     res.cookie("id", idCheck);
